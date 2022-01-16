@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Island+Moments&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate</title>
+    <style>
+        *{
+            font-family: 'Island Moments', cursive;
+        }
+        body{
+            background-color: #318fe7;
+            height: 100vh;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .title{
+            font-size: 3em;
+            color: rgb(49, 43, 43);
+            text-align: center;
+            position: absolute;
+            top: 0;
+            left: 50px;
+        }
+    </style>
+    
+</head>
+<body>
+    <h1 class="title">PirateLand</h1>
+    
+    <script>
+
+        class Boat{
+            constructor(x, y, width, height, speed, color){
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.speed = speed;
+                this.color = color;
+                this.boat = document.createElement('div');
+            }
+            draw(){
+                this.boat.style.width = this.width + 'px';
+                this.boat.style.height = this.height + 'px';
+                this.boat.style.backgroundColor = this.color;
+                this.boat.style.position = 'absolute';
+                this.boat.style.left = this.x + 'px';
+                this.boat.style.top = this.y + 'px';
+                // design
+                this.boat.style.borderRadius = '50%';
+                this.boat.style.border = '1px solid black';
+                this.boat.style.boxShadow = '0px 0px 10px black';
+                this.boat.style.zIndex = '1';
+
+                document.body.appendChild(this.boat);
+
+            }
+            move_to(x,y){
+                this.x = x;
+                this.y = y;
+            }
+            real_move(x,y){
+                this.boat.style.left = this.x + 'px';
+                this.boat.style.top = this.y + 'px';
+            }
+            async loop(){
+                // move to correct position))
+                while(this.x < this.width || this.y < this.height){
+                    if (this.x < this.width){
+                        this.real_move(this.x + this.speed, this.y);
+                    }
+                    if (this.y < this.height){
+                        this.real_move(this.x, this.y + this.speed);
+                    }
+                    await new Promise(r => setTimeout(r, 100));
+                }
+                 
+
+            }
+            
+        }
+
+      
+        let boat = new Boat(0,0,100,100,5,'red');
+        boat.draw();
+        window.addEventListener('mousemove', function(e){
+            boat.move_to(e.clientX, e.clientY);
+        });
+        boat.loop();
+
+        
+  
+
+
+    </script>
+</body>
+</html>
