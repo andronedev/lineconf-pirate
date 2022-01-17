@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,96 +8,183 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Island+Moments&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pirate</title>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"
+        integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H"
+        crossorigin="anonymous"></script>
+    <title>PirateLand</title>
     <style>
-        *{
+        * {
             font-family: 'Island Moments', cursive;
+            cursor: crosshair;
         }
-        body{
-            background-color: #318fe7;
+
+        body {
+            background-color: #000000;
             height: 100vh;
             min-height: 100vh;
             overflow: hidden;
+            background-image: none;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            background-size: cover;
+            background-image: url(/images/5.jpg);
+
         }
-        .title{
-            font-size: 3em;
-            color: rgb(49, 43, 43);
-            text-align: center;
+
+        .menu {
             position: absolute;
             top: 0;
-            left: 50px;
+            left: 0;
+            background-color: transparent;
+            z-index: 1;
+            /* center elements in */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 50px;
+
         }
-    </style>
-    
-</head>
-<body>
-    <h1 class="title">PirateLand</h1>
-    
-    <script>
 
-        class Boat{
-            constructor(x, y, width, height, speed, color){
-                this.x = x;
-                this.y = y;
-                this.width = width;
-                this.height = height;
-                this.speed = speed;
-                this.color = color;
-                this.boat = document.createElement('div');
-            }
-            draw(){
-                this.boat.style.width = this.width + 'px';
-                this.boat.style.height = this.height + 'px';
-                this.boat.style.backgroundColor = this.color;
-                this.boat.style.position = 'absolute';
-                this.boat.style.left = this.x + 'px';
-                this.boat.style.top = this.y + 'px';
-                // design
-                this.boat.style.borderRadius = '50%';
-                this.boat.style.border = '1px solid black';
-                this.boat.style.boxShadow = '0px 0px 10px black';
-                this.boat.style.zIndex = '1';
+        .title {
+            font-size: 3em;
+            color: rgb(206, 202, 202);
+            z-index: 2;
+            margin-right: 50px
+        }
 
-                document.body.appendChild(this.boat);
+        #name {
+            position: absolute;
+            /* center of screen */
+            top: 50%;
+            left: 50%;
+            /* transform to translate to center */
+            transform: translate(-50%, -50%);
+            /* make it big */
+            font-size: 3.7em;
+            color: rgb(49, 43, 43);
+            z-index: 2;
+            margin-right: 50px;
+            text-align: center;
 
-            }
-            move_to(x,y){
-                this.x = x;
-                this.y = y;
-            }
-            real_move(x,y){
-                this.boat.style.left = this.x + 'px';
-                this.boat.style.top = this.y + 'px';
-            }
-            async loop(){
-                // move to correct position))
-                while(this.x < this.width || this.y < this.height){
-                    if (this.x < this.width){
-                        this.real_move(this.x + this.speed, this.y);
-                    }
-                    if (this.y < this.height){
-                        this.real_move(this.x, this.y + this.speed);
-                    }
-                    await new Promise(r => setTimeout(r, 100));
-                }
-                 
+        }
 
-            }
+        .score {
+            position: fixed;
+            /* center of screen */
+            top: 20px;
+            right: 20px;
+            background-image: url(/images/parchemin.png);
+            background-repeat: no-repeat;
+            background-size: contain;
+            width: 275px;
+            height: 200px;
+            z-index: 3;
+            padding: 20px;
+            padding-left: 35px;
+            /* transparent */
+            background-color: transparent;
+            opacity: 0.8;
+
+        }
+
+        .score_zone {
+            overflow: hidden;
+        }
+
+        #score {
+            font-size: 1.8em;
+            color: rgb(49, 43, 43);
+            z-index: 2;
+            width: max-content;
+
+        }
+        .replay{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3.7em;
+            color: rgb(49, 43, 43);
+            width: 275px;
+            height: 200px;
+            padding: 20px;
+            padding-left: 35px;
+            z-index: 2;
+            margin-right: 50px;
+            background-image: url(/images/parchemin.png);
+            background-repeat: no-repeat;
+            background-size: contain;
+        
+
+
+
+        }
+        .replay button {
+            background-color: rgb(49, 43, 43);
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            font-size: 28px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 10px;
+            width: max-content;
+            /* center to parent */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
             
         }
+    </style>
 
-      
-        let boat = new Boat(0,0,100,100,5,'red');
-        boat.draw();
-        window.addEventListener('mousemove', function(e){
-            boat.move_to(e.clientX, e.clientY);
+</head>
+
+<body>
+    <div class="menu">
+        <h1 class="title">PirateLand</h1>
+    </div>
+    <input type="text" id="name" placeholder="Enter your name">
+    <div class="score">
+        <div class="score_zone">
+            <p id="score">Chargement..</p>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        const socket = io();
+
+
+        socket.on("connect", function () {
+            document.getElementById('name').addEventListener('keyup', function (e) {
+                if (e.keyCode === 13) {
+                    if (document.getElementById('name').value.length > 0) {
+                        document.getElementById('name').style.display = 'none';
+                        var username = document.getElementById('name').value;
+                        document.getElementById("name").value = "";
+                        var game = new Game(socket, username);
+                        game.startGame();
+                    }
+
+                }
+            })
+            socket.on("disconnect", function () {
+                alert("You have been disconnected")
+                window.location.reload()
+            })
+
         });
-        boat.loop();
 
-        
-  
 
 
     </script>
 </body>
+
 </html>
