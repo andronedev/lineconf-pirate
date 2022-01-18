@@ -155,17 +155,32 @@ class Game {
     updateGameArea() {
         var self = this;
         self.clear();
+        var speed = 1.5;
         self.myBoat.speedX = 0;
         self.myBoat.speedY = 0;
-        var speed = ((self.myBoat.width + self.myBoat.height) / 500);
-        if (speed > .80) speed = 0.80;
-        if (self.keys && self.keys[37]) { self.myBoat.speedX = -1 + speed }
-        if (self.keys && self.keys[39]) { self.myBoat.speedX = 1 - speed }
-        if (self.keys && self.keys[38]) { self.myBoat.speedY = -1 + speed }
-        if (self.keys && self.keys[40]) { self.myBoat.speedY = 1 - speed }
+        var slow = ((self.myBoat.width + self.myBoat.height) / 500);
+        if (slow > .80) slow = 0.80;
+        if (self.keys && self.keys[37]) { self.myBoat.speedX = -(speed) + slow }
+        if (self.keys && self.keys[39]) { self.myBoat.speedX = (speed) - slow }
+        if (self.keys && self.keys[38]) { self.myBoat.speedY = -(speed) + slow }
+        if (self.keys && self.keys[40]) { self.myBoat.speedY = (speed) - slow }
         self.myBoat.newPos();
 
         if (self.myBoat.speedX != 0 || self.myBoat.speedY != 0) {
+            // On vérifie si on est toujours sur la carte
+            if (self.myBoat.x < 0) {
+                self.myBoat.x = 0;
+            }
+            if (self.myBoat.x + self.myBoat.width > self.canvas.width) {
+                self.myBoat.x = self.canvas.width - self.myBoat.width;
+            }
+            if (self.myBoat.y < 0) {
+                self.myBoat.y = 0;
+            }
+            if (self.myBoat.y + self.myBoat.height > self.canvas.height) {
+                self.myBoat.y = self.canvas.height - self.myBoat.height;
+            }
+
             self.socket.emit('move', {
                 x: self.myBoat.x,
                 y: self.myBoat.y,
@@ -217,16 +232,6 @@ class Game {
             }
         });
 
-        self.socket.on("removed", function (id) {
-            for (var i = 0; i < self.otherBoats.length; i++) {
-                if (self.otherBoats[i].id == id) {
-                    self.otherBoats[i].remove();
-                    console.log(self.otherBoats[i].name + " left");
-                    self.otherBoats.splice(i, 1);
-                    break;
-                }
-            }
-        });
         self.socket.on("feed", function (data) {
             if (self.feeds[data.id] == null) {
                 var f = new Feed(data.x, data.y, data.id, self.socket);
