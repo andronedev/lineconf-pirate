@@ -213,4 +213,5 @@ function update_scoreboard() {
 setInterval(() => {
    update_scoreboard()
 }, 5000)
-server.listen(3000, function () { console.log('Votre app est disponible sur localhost:3000 !') })
+const PORT = process.env.PORT || 3000
+server.listen(PORT, function () { console.log('Votre app est disponible sur localhost:3000 !') })
