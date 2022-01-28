@@ -1,3 +1,14 @@
+const RUMYES = new Image();
+RUMYES.src = "/images/rum-yes.png";
+const RUMNO = new Image();
+RUMNO.src = "/images/rum-no.png";
+const BOATRIGHT = new Image();
+BOATRIGHT.src = "/images/boat-right.png";
+const BOATLEFT = new Image();
+BOATLEFT.src = "/images/boat-left.png";
+var BACKGROUND = new Image();
+BACKGROUND.src = "/images/1.jpg ";
+
 class Boat {
     constructor(width, height, color, x, y, name, id = "", socket) {
         this.width = width;
@@ -17,19 +28,19 @@ class Boat {
         if (this.dead) {
             return false
         }
-        var img = new Image();
+        var img;
         if (this.face == "right") {
-            img.src = "/images/boat-right.png";
+            img = BOATRIGHT;
         }
         if (this.face == "left") {
-            img.src = "/images/boat-left.png";
+            img = BOATLEFT;
         }
         gameArea.context.drawImage(img, this.x, this.y, this.width, this.height);
         // ajout du nom
         let fontSize = Math.min(this.width, this.height) / 3;
         gameArea.context.font = fontSize + "px Arial";
         gameArea.context.fillStyle = "white";
-        gameArea.context.fillText(this.name, this.x + 5, this.y - fontSize);
+        gameArea.context.fillText(this.name, this.x, this.y - fontSize);
         return true;
     }
     newPos() {
@@ -88,9 +99,8 @@ class Feed {
             return false
         }
         // image 10x10
-        var img = new Image();
-        img.src = "/images/rum-yes.png";
-        gameAera.context.drawImage(img, this.x, this.y, 30, 30);
+        
+        gameAera.context.drawImage(RUMYES, this.x, this.y, 30, 30);
         return true
     }
     remove() {
@@ -119,9 +129,8 @@ class Poison {
             return false
         }
         // image 10x10
-        var img = new Image();
-        img.src = "/images/rum-no.png";
-        gameAera.context.drawImage(img, this.x, this.y, 30, 30);
+
+        gameAera.context.drawImage(RUMNO, this.x, this.y, 30, 30);
         return true
     }
     remove() {
@@ -142,8 +151,12 @@ class Game {
     constructor(socket, username) {
         this.canvas = document.createElement("canvas");
         this.context = this.canvas.getContext("2d");
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        this.map = {
+            width: 2000,
+            height: 2000
+        }
+        this.canvas.width = this.map.width;
+        this.canvas.height = this.map.height;
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
         this.socket = socket
         this.keys = [];
@@ -152,6 +165,7 @@ class Game {
         this.otherBoats = [];
         this.feeds = [];
         this.poisons = [];
+     
     }
     clear() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -188,15 +202,17 @@ class Game {
     updateGameArea() {
         var self = this;
         self.clear();
-        var speed = 1.5;
+        self.background()
+        self.setZoomToBoat(self.myBoat)
+        var speed = 5;
         self.myBoat.speedX = 0;
         self.myBoat.speedY = 0;
-        var slow = ((self.myBoat.width + self.myBoat.height) / 500);
-        if (slow > .80) slow = 0.80;
-        if (self.keys && self.keys[37]) { self.myBoat.speedX = -(speed) + slow }
-        if (self.keys && self.keys[39]) { self.myBoat.speedX = (speed) - slow }
-        if (self.keys && self.keys[38]) { self.myBoat.speedY = -(speed) + slow }
-        if (self.keys && self.keys[40]) { self.myBoat.speedY = (speed) - slow }
+        var slow = (self.myBoat.width + self.myBoat.height) / 2 /20 + 5;
+        speed = speed / slow;
+        if (self.keys && self.keys[37]) { self.myBoat.speedX = -(speed) }
+        if (self.keys && self.keys[39]) { self.myBoat.speedX = (speed) }
+        if (self.keys && self.keys[38]) { self.myBoat.speedY = -(speed) }
+        if (self.keys && self.keys[40]) { self.myBoat.speedY = (speed) }
         self.myBoat.newPos();
 
         if (self.myBoat.speedX != 0 || self.myBoat.speedY != 0) {
@@ -204,14 +220,14 @@ class Game {
             if (self.myBoat.x < 0) {
                 self.myBoat.x = 0;
             }
-            if (self.myBoat.x + self.myBoat.width > self.canvas.width) {
-                self.myBoat.x = self.canvas.width - self.myBoat.width;
+            if (self.myBoat.x + self.myBoat.width > self.map.width) {
+                self.myBoat.x = self.map.width - self.myBoat.width;
             }
             if (self.myBoat.y < 0) {
                 self.myBoat.y = 0;
             }
-            if (self.myBoat.y + self.myBoat.height > self.canvas.height) {
-                self.myBoat.y = self.canvas.height - self.myBoat.height;
+            if (self.myBoat.y + self.myBoat.height > self.map.height) {
+                self.myBoat.y = self.map.height - self.myBoat.height;
             }
 
             self.socket.emit('move', {
@@ -221,6 +237,8 @@ class Game {
                 speedY: self.myBoat.speedY,
             });
         }
+        // zoom in and out with size and position
+        
 
 
         if (!self.myBoat.update(self)) {
@@ -244,6 +262,39 @@ class Game {
                 self.poisons.splice(i, 1)
             }
         }
+    }
+    setZoomToBoat(boat) {
+        // set the view of the game area to the boat
+        return // TODO
+        var self = this;
+        self.context.resetTransform();
+        self.context.restore();
+        var unzoom = (self.myBoat.width + self.myBoat.height) / 500
+        if (unzoom > 2.3 || (self.myBoat.width + self.myBoat.height) > 500) {
+            unzoom = 2.4;
+        }
+        var zoom = 2.4 - unzoom;
+        // set the boat to the center of the screen 
+        // and zoom in and out
+        self.context.translate(self.canvas.width / 2 - boat.x, self.canvas.height / 2 - boat.y);
+        self.context.scale(zoom, zoom);
+
+        
+
+        
+    }
+    background() {
+        var self = this;
+        // set image background BACKGROUND
+        // crop the image to the size of the canvas
+
+            // don't resize the image, just crop it
+            var pattern = self.context.createPattern(BACKGROUND, 'repeat');
+            self.context.fillStyle = pattern;
+            self.context.fillRect(0, 0, self.canvas.width, self.canvas.height);
+            
+
+
     }
     startGame() {
         var self = this;
@@ -277,6 +328,15 @@ class Game {
                 f.sync()
             }
         });
+
+        self.socket.on("poison", function (data) {
+            if (self.poisons[data.id] == null) {
+                var p = new Poison(data.x, data.y, data.id, self.socket);
+                self.poisons.push(p);
+                p.sync()
+            }
+        });
+
         fetch("/init").then(res => res.json()).then(data => {
             data.feeds.forEach(f => {
                 if (self.feeds[f.id] == null) {
@@ -285,6 +345,14 @@ class Game {
                     feed.sync()
                 }
             })
+            data.poisons.forEach(p => {
+                if (self.poisons[p.id] == null) {
+                    var poison = new Poison(p.x, p.y, p.id, self.socket);
+                    self.poisons.push(poison);
+                    poison.sync()
+                }
+            })
+
             for (const [key, value] of Object.entries(data.boats)) {
                 if (self.otherBoats[key] == null && key != self.socket.id) {
                     var b = new Boat(value.width, value.height, value.color, value.x, value.y, value.name, key, self.socket);
@@ -298,9 +366,15 @@ class Game {
             var audio = new Audio('/musique/main.mp3');
             audio.loop = true;
             audio.play();
+
+
+
         });
         self.socket.on("update_background_image", (data) => {
             document.body.style.backgroundImage = "url(" + data.image + ")";
+            BACKGROUND = new Image();
+            BACKGROUND.src = data.image;
+            
         })
 
         self.socket.on("update_score", (data) => {
