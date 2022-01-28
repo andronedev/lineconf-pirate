@@ -106,6 +106,38 @@ class Feed {
     }
 }
 
+class Poison {
+    constructor(x, y, id, socket) {
+        this.x = x;
+        this.y = y;
+        this.id = id;
+        this.removed = false;
+        this.socket = socket;
+    }
+    update(gameAera) {
+        if (this.removed) {
+            return false
+        }
+        // image 10x10
+        var img = new Image();
+        img.src = "/images/rum-no.png";
+        gameAera.context.drawImage(img, this.x, this.y, 30, 30);
+        return true
+    }
+    remove() {
+        this.removed = true;
+    }
+    async sync() {
+        var self = this;
+        self.socket.on("eat", (data) => {
+            if (data.id == self.id) {
+                self.remove();
+            }
+        })
+    }
+}
+
+
 class Game {
     constructor(socket, username) {
         this.canvas = document.createElement("canvas");
@@ -119,6 +151,7 @@ class Game {
         this.username = username;
         this.otherBoats = [];
         this.feeds = [];
+        this.poisons = [];
     }
     clear() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -204,6 +237,11 @@ class Game {
         for (var i = 0; i < self.feeds.length; i++) {
             if (!self.feeds[i].update(self)) {
                 self.feeds.splice(i, 1)
+            }
+        }
+        for (var i = 0; i < self.poisons.length; i++) {
+            if (!self.poisons[i].update(self)) {
+                self.poisons.splice(i, 1)
             }
         }
     }

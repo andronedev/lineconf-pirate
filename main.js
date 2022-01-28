@@ -25,6 +25,7 @@ app.use('/js', express.static('public/js'))
 
 var boats = {}
 var feeds = []
+var poisons = []
 app.get('/init', function (req, res) {
    res.send({
       boats,
@@ -55,20 +56,42 @@ function boat_collision(boat1) {
 }
 
 function eat_collision(boat) {
-   // RETURN THE ANOTHER BOAT THAT EAT THE FIRST ONE
    for (let i = 0; i < feeds.length; i++) {
-      if (boat.id != feeds[i].id) {
-         // x & y of feed
-         let x = [feeds[i].x, feeds[i].x + 10]
-         let y = [feeds[i].y, feeds[i].y + 10]
-         // x & y of boat
+      // x & y of feed
+      let x = [feeds[i].x, feeds[i].x + 10]
+      let y = [feeds[i].y, feeds[i].y + 10]
+      // x & y of boat
 
-         let myx = [boat.x, boat.x + boat.width]
-         let myy = [boat.y, boat.y + boat.height]
-         // if boat & feed touch or in the same area
-         if (myx[0] <= x[1] && myx[1] >= x[0] && myy[0] <= y[1] && myy[1] >= y[0]) {
-            return feeds[i]
-         }
+      let myx = [boat.x, boat.x + boat.width]
+      let myy = [boat.y, boat.y + boat.height]
+      // if boat & feed touch or in the same area
+      if (myx[0] <= x[1] && myx[1] >= x[0] && myy[0] <= y[1] && myy[1] >= y[0]) {
+         return feeds[i]
+
+      }
+   }
+   return false
+
+}
+function poison_collision(boat) {
+   // verifie si la taille du bateau est superieur a 40
+   if (boat.width < 40 || boat.height < 40) {
+      return false
+   }
+
+   for (let i = 0; i < poisons.length; i++) {
+
+      // x & y of feed
+      let x = [poisons[i].x, poisons[i].x + 10]
+      let y = [poisons[i].y, poisons[i].y + 10]
+      // x & y of boat
+
+      let myx = [boat.x, boat.x + boat.width]
+      let myy = [boat.y, boat.y + boat.height]
+      // if boat & feed touch or in the same area
+      if (myx[0] <= x[1] && myx[1] >= x[0] && myy[0] <= y[1] && myy[1] >= y[0]) {
+         return poisons[i]
+
       }
    }
    return false
@@ -118,7 +141,7 @@ io.on('connection', (socket) => {
                width: myboat.width + crash.width
             })
          }
-         if (myboat.width + myboat.height < crash.width + crash.height)  {
+         if (myboat.width + myboat.height < crash.width + crash.height) {
             io.emit("dead", {
                id: myboat.id
             })
@@ -154,6 +177,20 @@ io.on('connection', (socket) => {
          io.emit("win", new_size)
          update_scoreboard()
       }
+      var poison = poison_collision(boats[socket.id])
+      if (poison) {
+         io.emit("poison", poison)
+         poisons.splice(poisons.indexOf(poison), 1)
+         boats[data.id].width -= 10
+         boats[data.id].height -= 10
+         let new_size = {
+            id: data.id,
+            width: boats[data.id].width,
+            height: boats[data.id].height
+         }
+         io.emit("win", new_size)
+         update_scoreboard()
+      }
 
       io.emit("move", data)
 
@@ -164,31 +201,53 @@ io.on('connection', (socket) => {
       delete boats[socket.id]
       io.emit("removed", socket.id)
    })
-   setInterval(() => {
-      console.log("Nombre de nourriture : " + feeds.length)
-      if (feeds.length < 25) {
-         let f = {
-            id: (Math.random() + 1).toString(36).substring(7),
-            x: Math.random() * 1800,
-            y: Math.random() * 1000
-         }
-         feeds.push(f)
-         io.emit("feed", f)
-      } else {
-         // remove random feed
 
-
-         io.emit("eat", {
-            id: feeds[0].id
-         })
-
-         feeds.splice(0, 1)
+})
+setInterval(() => {
+   console.log("Nombre de nourriture : " + feeds.length)
+   if (feeds.length < 25) {
+      let f = {
+         id: (Math.random() + 1).toString(36).substring(7),
+         x: Math.random() * 1800,
+         y: Math.random() * 1000
       }
-   }, 7000)
+
+      feeds.push(f)
+      io.emit("feed", f)
+   } else {
+      // remove random feed
 
 
+      io.emit("eat", {
+         id: feeds[0].id
+      })
 
-}) // on change app par server
+      feeds.splice(0, 1)
+   }
+}, 7000)
+
+setInterval(() => {
+   console.log("Nombre de poison : " + poisons.length)
+   if (poisons.length < 20) {
+      let p = {
+         id: (Math.random() + 1).toString(36).substring(7),
+         x: Math.random() * 1800,
+         y: Math.random() * 1000
+      }
+
+      poisons.push(p)
+      io.emit("poison", p)
+   } else {
+      // remove random poison
+      poisons.splice(0, 1)
+      io.emit("eat", {
+         id: poisons[0].id
+      })
+
+   }
+
+}, 7000)
+// on change app par server
 setInterval(() => {
    current_background = rnd_background()
    io.emit("update_background_image", {
