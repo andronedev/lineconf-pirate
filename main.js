@@ -357,15 +357,29 @@ function get_best_direction(boat,speed) {
    if (boat_smallest_by_distance.length > 0) {
       let x = boat_smallest_by_distance[0].x - boat.x
       let y = boat_smallest_by_distance[0].y - boat.y
+      let new_pos_x = 0
+      let new_pos_y = 0
       let move_x = 0
       let move_y = 0
-      if (x > 0) move_x = speed
-      if (x < 0) move_x = -(speed)
-      if (y > 0) move_y = speed
-      if (y < 0) move_y = -(speed)
+      if (x > 0) {
+         move_x = speed
+         new_pos_x = 1
+      }
+      if (x < 0) {
+         move_x = -(speed)
+         new_pos_x = -1
+      }
+      if (y > 0){
+         move_y = speed
+         new_pos_y = 1
+      }
+      if (y < 0) {
+         move_y = -(speed)
+         new_pos_y = -1
+      }
       return {
-         x: x,
-         y: y,
+         x: new_pos_x,
+         y: new_pos_y,
          speedX: move_x,
          speedY: move_y
       }
