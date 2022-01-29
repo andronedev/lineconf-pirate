@@ -147,6 +147,8 @@
             top: 0;
             left: 0;
             z-index: 0;
+            background-color: black;
+            
         }
     </style>
 
@@ -174,7 +176,7 @@
                     if (document.getElementById('name').value.length > 0) {
                         document.getElementById('name').style.display = 'none';
                         var username = document.getElementById('name').value;
-                        document.getElementById("name").value = "";
+                        document.getElementById("name").remove();
                         var game = new Game(socket, username);
                         game.startGame();
                     }

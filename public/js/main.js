@@ -99,7 +99,7 @@ class Feed {
             return false
         }
         // image 10x10
-        
+
         gameAera.context.drawImage(RUMYES, this.x, this.y, 30, 30);
         return true
     }
@@ -152,8 +152,8 @@ class Game {
         this.canvas = document.createElement("canvas");
         this.context = this.canvas.getContext("2d");
         this.map = {
-            width: 2000,
-            height: 2000
+            width: 1500,
+            height: 1500
         }
         this.canvas.width = this.map.width;
         this.canvas.height = this.map.height;
@@ -165,7 +165,11 @@ class Game {
         this.otherBoats = [];
         this.feeds = [];
         this.poisons = [];
-     
+        this.camera = {
+            x: 0,
+            y: 0
+        }
+
     }
     clear() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -184,6 +188,9 @@ class Game {
             self.keys = (self.keys || []);
             self.keys[e.keyCode] = false;
         })
+        // screen touch
+        // window.addEventListener('touchmove', function (e) {
+
     }
     gameOver() {
         clearInterval(this.interval);
@@ -202,12 +209,13 @@ class Game {
     updateGameArea() {
         var self = this;
         self.clear();
-        self.background()
         self.setZoomToBoat(self.myBoat)
+        self.clear();
+        self.background()
         var speed = 5;
         self.myBoat.speedX = 0;
         self.myBoat.speedY = 0;
-        var slow = (self.myBoat.width + self.myBoat.height) / 2 /20 + 5;
+        var slow = (self.myBoat.width + self.myBoat.height)/2;
         speed = speed / slow;
         if (self.keys && self.keys[37]) { self.myBoat.speedX = -(speed) }
         if (self.keys && self.keys[39]) { self.myBoat.speedX = (speed) }
@@ -238,7 +246,7 @@ class Game {
             });
         }
         // zoom in and out with size and position
-        
+
 
 
         if (!self.myBoat.update(self)) {
@@ -264,35 +272,42 @@ class Game {
         }
     }
     setZoomToBoat(boat) {
-        // set the view of the game area to the boat
-        return // TODO
-        var self = this;
-        self.context.resetTransform();
-        self.context.restore();
-        var unzoom = (self.myBoat.width + self.myBoat.height) / 500
-        if (unzoom > 2.3 || (self.myBoat.width + self.myBoat.height) > 500) {
-            unzoom = 2.4;
+        // follow the boat
+
+        this.context.resetTransform();
+        // map is 2000x2000
+       
+        // if boat is out od the screen
+        if (boat.x < window.innerWidth - boat.width) {
+            this.camera.x = boat.x *1.5 - window.innerWidth / 2 + boat.width / 2;
         }
-        var zoom = 2.4 - unzoom;
-        // set the boat to the center of the screen 
-        // and zoom in and out
-        self.context.translate(self.canvas.width / 2 - boat.x, self.canvas.height / 2 - boat.y);
-        self.context.scale(zoom, zoom);
+        if (boat.x > window.innerWidth - boat.width) {
+            this.camera.x = boat.x *1.5 - window.innerWidth / 2 + boat.width / 2;
+        }
+        if (boat.y < window.innerHeight - boat.height) {
+            this.camera.y = boat.y *1.5 - window.innerHeight / 2 + boat.height / 2;
+        }
+        if (boat.y > window.innerHeight - boat.height) {
+            this.camera.y = boat.y *1.5 - window.innerHeight / 2 + boat.height / 2;
+        }
 
         
+        this.context.translate(-this.camera.x, -this.camera.y)
+        this.context.scale(1.5, 1.5);
 
-        
+
+
     }
     background() {
         var self = this;
         // set image background BACKGROUND
         // crop the image to the size of the canvas
 
-            // don't resize the image, just crop it
-            var pattern = self.context.createPattern(BACKGROUND, 'repeat');
-            self.context.fillStyle = pattern;
-            self.context.fillRect(0, 0, self.canvas.width, self.canvas.height);
-            
+        // don't resize the image, just crop it
+        var pattern = self.context.createPattern(BACKGROUND, 'repeat');
+        self.context.fillStyle = pattern;
+        self.context.fillRect(0, 0, self.canvas.width, self.canvas.height);
+
 
 
     }
@@ -374,7 +389,7 @@ class Game {
             document.body.style.backgroundImage = "url(" + data.image + ")";
             BACKGROUND = new Image();
             BACKGROUND.src = data.image;
-            
+
         })
 
         self.socket.on("update_score", (data) => {

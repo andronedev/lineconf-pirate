@@ -15,8 +15,8 @@ app.get('/', function (req, res) {
 })
 
 const MAP = {
-   width: 2000,
-   height: 2000
+   width: 1500,
+   height: 1500
 }
 
 function rnd_background() {
@@ -257,16 +257,16 @@ function moving(data) {
 }
 
 function createIA() {
-   let x = Math.floor(Math.random() * MAP.width) 
+   let x = Math.floor(Math.random() * MAP.width)
    let y = Math.floor(Math.random() * MAP.height)
    let id = (Math.random() + 1).toString(36).substring(7)
    let name = boats_name[Math.floor(Math.random() * boats_name.length)]
-   let size = + Math.floor(Math.random() * 10)+30
+   let size = + Math.floor(Math.random() * 10) + 30
    let boat = {
       id: id,
       x: x,
       y: y,
-      name: "🤖 "+ name +" #" + id.substring(0, 2),
+      name: "🤖 " + name + " #" + id.substring(0, 2),
       width: size,
       height: size,
    }
@@ -278,7 +278,7 @@ function createIA() {
 async function autopilot(ia) {
    while (boats[ia.id]) {
       randomMove(ia)
-   
+
       await new Promise(r => setTimeout(r, 20))
       //check if the boat is too big
       if (boats[ia.id].width > 500 || boats[ia.id].height > 500) {
@@ -299,8 +299,8 @@ function randomMove(ia) {
    let y = boat.y
    let speedX = 0;
    let speedY = 0;
-   var speed = 7;
-   var slow = (ia.width + ia.height)/ 2 /20 +15;
+   var speed = 5;
+   var slow = (ia.width + ia.height )/2;
    speed = speed / slow;
    // move to one random direction
    // cap to feed 
@@ -351,18 +351,11 @@ function get_best_direction(boat) {
    let boat_smallest = boat_list.filter(b => b.id != boat.id && b.width + b.height < boat.width + boat.height)
 
    // console.log("boat_smallest", boat_smallest)
-   // short feeds and boats by distance
-   let feeds_by_distance = feeds.sort((a, b) => {
-      return (Math.abs(a.x - boat.x) + Math.abs(a.y - boat.y)) - (Math.abs(b.x - boat.x) + Math.abs(b.y - boat.y))
-   }
-   )
    let boat_smallest_by_distance = boat_smallest.sort((a, b) => {
       return (Math.abs(a.x - boat.x) + Math.abs(a.y - boat.y)) - (Math.abs(b.x - boat.x) + Math.abs(b.y - boat.y))
    })
-   console.log(feeds_by_distance)
-   console.log(boat_smallest_by_distance)
    // check what is the best direction
-   if (boat_smallest_by_distance.length>0) {
+   if (boat_smallest_by_distance.length > 0) {
       let x = boat_smallest_by_distance[0].x - boat.x
       let y = boat_smallest_by_distance[0].y - boat.y
       let move_x = 0
@@ -378,7 +371,12 @@ function get_best_direction(boat) {
          speedY: y
       }
    }
-   if (feeds_by_distance.length>0) {
+   // short feeds and boats by distance
+   let feeds_by_distance = feeds.sort((a, b) => {
+      return (Math.abs(a.x - boat.x) + Math.abs(a.y - boat.y)) - (Math.abs(b.x - boat.x) + Math.abs(b.y - boat.y))
+   }
+   )
+   if (feeds_by_distance.length > 0) {
       let x = feeds_by_distance[0].x - boat.x
       let y = feeds_by_distance[0].y - boat.y
       let move_x = 0
