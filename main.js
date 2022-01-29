@@ -299,9 +299,10 @@ function randomMove(ia) {
    let y = boat.y
    let speedX = 0;
    let speedY = 0;
-   var speed = 5;
-   var slow = (ia.width + ia.height )/2;
-   speed = speed / slow;
+   var speed = 0
+   var size = (ia.width + ia.height )/2;
+
+   speed = 100 * 1/size
    // move to one random direction
    // cap to feed 
    let bestdirec = get_best_direction(boat)

@@ -212,11 +212,11 @@ class Game {
         self.setZoomToBoat(self.myBoat)
         self.clear();
         self.background()
-        var speed = 5;
+        var speed = 0;
         self.myBoat.speedX = 0;
         self.myBoat.speedY = 0;
-        var slow = (self.myBoat.width + self.myBoat.height)/2;
-        speed = speed / slow;
+        var size = (self.myBoat.width + self.myBoat.height)/2;
+        speed = 100 * 1/size 
         if (self.keys && self.keys[37]) { self.myBoat.speedX = -(speed) }
         if (self.keys && self.keys[39]) { self.myBoat.speedX = (speed) }
         if (self.keys && self.keys[38]) { self.myBoat.speedY = -(speed) }
