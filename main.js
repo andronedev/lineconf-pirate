@@ -305,11 +305,11 @@ function randomMove(ia) {
    speed = 100 * 1/size
    // move to one random direction
    // cap to feed 
-   let bestdirec = get_best_direction(boat)
+   let bestdirec = get_best_direction(boat,speed)
    if (bestdirec) {
-      x += bestdirec.x * speed
+      x = bestdirec.x
       speedX = bestdirec.speedX
-      y += bestdirec.y * speed
+      y = bestdirec.y
       speedY = bestdirec.speedY
    }
    else {
@@ -318,26 +318,24 @@ function randomMove(ia) {
       switch (direction) {
          case 0:
             x += 1
-            speedX = 1
+            speedX = speed
             break
          case 1:
             x -= 1
-            speedX = -1
+            speedX = -(speed)
             break
          case 2:
             y += 1
-            speedY = 1
+            speedY = speed
             break
          case 3:
             y -= 1
-            speedY = -1
+            speedY = -(speed)
             break
       }
    }
    boats[ia.id] = {
       ...boats[ia.id],
-      x: x,
-      y: y,
       speedX: speedX,
       speedY: speedY
    }
@@ -346,7 +344,7 @@ function randomMove(ia) {
 
 }
 
-function get_best_direction(boat) {
+function get_best_direction(boat,speed) {
    // donne la direction la plus proche de la nourriture ou d'un bateau adverse plus petit 
    let boat_list = Object.values(boats)
    let boat_smallest = boat_list.filter(b => b.id != boat.id && b.width + b.height < boat.width + boat.height)
@@ -361,10 +359,10 @@ function get_best_direction(boat) {
       let y = boat_smallest_by_distance[0].y - boat.y
       let move_x = 0
       let move_y = 0
-      if (x > 0) move_x = 1
-      if (x < 0) move_x = -1
-      if (y > 0) move_y = 1
-      if (y < 0) move_y = -1
+      if (x > 0) move_x = speed
+      if (x < 0) move_x = -(speed)
+      if (y > 0) move_y = speed
+      if (y < 0) move_y = -(speed)
       return {
          x: move_x,
          y: move_y,
