@@ -364,10 +364,10 @@ function get_best_direction(boat,speed) {
       if (y > 0) move_y = speed
       if (y < 0) move_y = -(speed)
       return {
-         x: move_x,
-         y: move_y,
-         speedX: x,
-         speedY: y
+         x: x,
+         y: y,
+         speedX: move_x,
+         speedY: move_y
       }
    }
    // short feeds and boats by distance
