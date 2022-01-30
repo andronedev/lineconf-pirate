@@ -245,7 +245,6 @@ class Game {
                 speedY: self.myBoat.speedY,
             });
         }
-        // zoom in and out with size and position
 
 
 
@@ -272,12 +271,10 @@ class Game {
         }
     }
     setZoomToBoat(boat) {
-        // follow the boat
+        // Permet de zoomer sur la bateau 
 
         this.context.resetTransform();
-        // map is 2000x2000
 
-        // if boat is out od the screen
         if (boat.x < window.innerWidth - boat.width) {
             this.camera.x = boat.x * this.camera.zoom - window.innerWidth / 2 + boat.width / 2;
         }
@@ -301,10 +298,6 @@ class Game {
     }
     background() {
         var self = this;
-        // set image background BACKGROUND
-        // crop the image to the size of the canvas
-
-        // don't resize the image, just crop it
         var pattern = self.context.createPattern(BACKGROUND, 'repeat');
         self.context.fillStyle = pattern;
         self.context.fillRect(0, 0, self.canvas.width, self.canvas.height);
