@@ -126,7 +126,7 @@ function moving(data) {
    if (crash) {
       crash = boats[crash]
       var myboat = boats[data.id]
-      console.log("crash with", crash)
+      //console.log("crash with", crash)
 
 
       if (myboat.width + myboat.height > crash.width + crash.height) {
