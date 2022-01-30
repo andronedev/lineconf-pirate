@@ -249,20 +249,27 @@ function find_safe_position(){
 
 async function auto_pilot(ia) {
    while (boats[ia.id]) {
+      try {
+         
       
       // Au dela de MAX_BOATS_IA le bateau a perdu (pour eviter que les IA gagne en boucle)
-      
+      ia_move(ia)
+
+
       if (boats[ia.id].width > config.MAX_SIZE_IA || boats[ia.id].height > config.MAX_SIZE_IA) {
          delete boats[ia.id]
          io.emit("dead", ia)
          break
       }
-         
+   } catch (error) {
+      delete boats[ia.id]
+      io.emit("dead", ia)
+      break
+   }
+
+      
       // on attend 20 ms (fps)
       await new Promise(r => setTimeout(r, 20))
-
-      ia_move(ia)
-
    }
 }
 
@@ -276,6 +283,10 @@ function ia_move(ia){
    var speed = 0
    var size = (ia.width + ia.height);
    speed = 100 * 1 / size
+   if (speed < 0.2) {
+      speed = 0.2
+   }
+
    
 
    let bestdirec = get_best_direction(ia, speed)
@@ -373,7 +384,7 @@ setInterval(() => {
 
 setInterval(() => {
    console.log("Nombre de nourriture : " + feeds.length)
-   if (feeds.length < 25) {
+   if (feeds.length < config.FEED_NUMBER) {
       let f = {
          id: (Math.random() + 1).toString(36).substring(7),
          x: Math.random() * config.MAP.width - 10,
@@ -395,7 +406,7 @@ setInterval(() => {
 
 setInterval(() => {
    console.log("Nombre de poison : " + poisons.length)
-   if (poisons.length < 35) {
+   if (poisons.length < config.POISON_NUMBER) {
       let p = {
          id: (Math.random() + 1).toString(36).substring(7),
          x: Math.random() * config.MAP.width - 10,
@@ -421,7 +432,7 @@ setInterval(() => {
    io.emit("update_background_image", {
       image: current_background
    })
-}, 60000)
+}, config.BACKGROUND_UPDATE_TIME)
 
 
 function update_scoreboard() {

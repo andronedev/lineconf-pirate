@@ -217,6 +217,9 @@ class Game {
         self.myBoat.speedY = 0;
         var size = (self.myBoat.width + self.myBoat.height);
         speed = 100 * 1 / size
+        if (speed < 0.2) {
+            speed = 0.2
+        }
         if (self.keys && self.keys[37]) { self.myBoat.speedX = -(speed) }
         if (self.keys && self.keys[39]) { self.myBoat.speedX = (speed) }
         if (self.keys && self.keys[38]) { self.myBoat.speedY = -(speed) }
