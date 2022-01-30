@@ -164,9 +164,15 @@
             <p id="score">Chargement..</p>
         </div>
     </div>
-
+    <script>
+        // si l'appareil est un telephone ou une tablette on afficge un message d'erreur
+        if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
+            document.body.innerHTML = "<h1 style='color:white;text-align:center;font-size:100px;'>Votre appareil n'est pas compatible avec ce jeu, merci d'utiliser ordinateur</h1>";
+        }
+    </script>
     <script src="/js/main.js"></script>
     <script>
+        
         const socket = io();
 
 
