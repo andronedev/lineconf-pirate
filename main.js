@@ -5,6 +5,10 @@ const config = require('./config')
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
 
+var current_background = random_background()
+var boats = {}
+var feeds = []
+var poisons = []
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -12,23 +16,9 @@ app.use(express.static('public'))
 app.get('/', function (req, res) {
    res.sendFile('public/index.html', { root: __dirname })
 })
-
-
-function rnd_background() {
-   return "/images/" + (Math.floor(Math.random() * 5) + 1) + ".jpg"
-}
-
-
-var current_background = rnd_background()
 app.use('/images', express.static('public/images'))
 app.use('/musique', express.static('public/musique'))
 app.use('/js', express.static('public/js'))
-
-var boats = {}
-var feeds = []
-var poisons = []
-
-
 app.get('/init', function (req, res) {
    let {x,y} = find_safe_position()
    res.send({
@@ -42,6 +32,9 @@ app.get('/init', function (req, res) {
    })
 })
 
+function random_background() {
+   return "/images/" + (Math.floor(Math.random() * 5) + 1) + ".jpg"
+}
 
 function boat_collision(boat1) {
 
@@ -60,14 +53,11 @@ function boat_collision(boat1) {
 
 function eat_collision(boat) {
    for (let i = 0; i < feeds.length; i++) {
-      // x & y of feed
       let x = [feeds[i].x, feeds[i].x + 10]
       let y = [feeds[i].y, feeds[i].y + 10]
-      // x & y of boat
 
       let myx = [boat.x, boat.x + boat.width]
       let myy = [boat.y, boat.y + boat.height]
-      // if boat & feed touch or in the same area
       if (myx[0] <= x[1] && myx[1] >= x[0] && myy[0] <= y[1] && myy[1] >= y[0]) {
          return feeds[i]
 
@@ -84,14 +74,11 @@ function poison_collision(boat) {
 
    for (let i = 0; i < poisons.length; i++) {
 
-      // x & y of feed
       let x = [poisons[i].x, poisons[i].x + 10]
       let y = [poisons[i].y, poisons[i].y + 10]
-      // x & y of boat
 
       let myx = [boat.x, boat.x + boat.width]
       let myy = [boat.y, boat.y + boat.height]
-      // if boat & feed touch or in the same area
       if (myx[0] <= x[1] && myx[1] >= x[0] && myy[0] <= y[1] && myy[1] >= y[0]) {
          return poisons[i]
 
@@ -217,7 +204,7 @@ function moving(data) {
    io.emit("move", data)
 }
 
-function createIA() {
+function create_IA() {
    var {x,y} = find_safe_position()
 
    let id = (Math.random() + 1).toString(36).substring(7)
@@ -260,7 +247,7 @@ function find_safe_position(){
 
 
 
-async function autopilot(ia) {
+async function auto_pilot(ia) {
    while (boats[ia.id]) {
       
       // Au dela de MAX_BOATS_IA le bateau a perdu (pour eviter que les IA gagne en boucle)
@@ -274,12 +261,12 @@ async function autopilot(ia) {
       // on attend 20 ms (fps)
       await new Promise(r => setTimeout(r, 20))
 
-      iaMove(ia)
+      ia_move(ia)
 
    }
 }
 
-function iaMove(ia){
+function ia_move(ia){
    ia = boats[ia.id]
    let speedX = 0;
    let speedY = 0;
@@ -377,7 +364,7 @@ function get_best_direction(boat, speed) {
 
 setInterval(() => {
       if (Math.random() > 0.8 && Object.values(boats).length < config.MAX_BOATS_IA) {
-      autopilot(createIA())
+      auto_pilot(create_IA())
    }
 }, 1000)
 
@@ -430,7 +417,7 @@ setInterval(() => {
 
 // CHANGEMENT DE FOND :
 setInterval(() => {
-   current_background = rnd_background()
+   current_background = random_background()
    io.emit("update_background_image", {
       image: current_background
    })
