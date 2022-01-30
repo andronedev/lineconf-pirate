@@ -295,117 +295,94 @@ async function autopilot(ia) {
 
 function randomMove(ia) {
    let boat = boats[ia.id]
-   let x = boat.x
-   let y = boat.y
    let speedX = 0;
    let speedY = 0;
-   var speed = 0
-   var size = (ia.width + ia.height )/2;
+   let x = boat.x
+   let y = boat.y
 
-   speed = 100 * 1/size
+   var speed = 0
+   var size = (ia.width + ia.height);
+
+   speed = 30 * 1 / size
    // move to one random direction
    // cap to feed 
-   let bestdirec = get_best_direction(boat,speed)
+   let bestdirec = get_best_direction(boat, speed)
    if (bestdirec) {
-      x = bestdirec.x
       speedX = bestdirec.speedX
-      y = bestdirec.y
       speedY = bestdirec.speedY
-   }
-   else {
-      let direction = Math.floor(Math.random() * 4)
-
-      switch (direction) {
-         case 0:
-            x += 1
-            speedX = speed
-            break
-         case 1:
-            x -= 1
-            speedX = -(speed)
-            break
-         case 2:
-            y += 1
-            speedY = speed
-            break
-         case 3:
-            y -= 1
-            speedY = -(speed)
-            break
+      x += speedX
+      y += speedY
+      if (x < 0) {
+         x = 0
       }
+      if (y < 0) {
+         y = 0
+      }
+      if (x > MAP.width) {
+         x = MAP.width
+      }
+      if (y > MAP.height) {
+         y = MAP.height
+      }
+      boats[ia.id] = {
+         ...boats[ia.id],
+         x: x,
+         y: y,
+         speedX: speedX,
+         speedY: speedY
+      }
+      moving(boats[ia.id])
    }
-   boats[ia.id] = {
-      ...boats[ia.id],
-      speedX: speedX,
-      speedY: speedY
-   }
-
-   moving(boats[ia.id])
 
 }
 
-function get_best_direction(boat,speed) {
+function get_best_direction(boat, speed) {
    // donne la direction la plus proche de la nourriture ou d'un bateau adverse plus petit 
    let boat_list = Object.values(boats)
    let boat_smallest = boat_list.filter(b => b.id != boat.id && b.width + b.height < boat.width + boat.height)
+   var x = boat.x
+   var y = boat.y
+   var speedX = 0
+   var speedY = 0
 
-   // console.log("boat_smallest", boat_smallest)
    let boat_smallest_by_distance = boat_smallest.sort((a, b) => {
       return (Math.abs(a.x - boat.x) + Math.abs(a.y - boat.y)) - (Math.abs(b.x - boat.x) + Math.abs(b.y - boat.y))
    })
    // check what is the best direction
    if (boat_smallest_by_distance.length > 0) {
-      let x = boat_smallest_by_distance[0].x - boat.x
-      let y = boat_smallest_by_distance[0].y - boat.y
-      let new_pos_x = 0
-      let new_pos_y = 0
-      let move_x = 0
-      let move_y = 0
-      if (x > 0) {
-         move_x = speed
-         new_pos_x = 1
+      x = boat_smallest_by_distance[0].x - boat.x
+      y = boat_smallest_by_distance[0].y - boat.y
+
+   } else {
+      // short feeds and boats by distance
+      let feeds_by_distance = feeds.sort((a, b) => {
+         return (Math.abs(a.x - boat.x) + Math.abs(a.y - boat.y)) - (Math.abs(b.x - boat.x) + Math.abs(b.y - boat.y))
       }
-      if (x < 0) {
-         move_x = -(speed)
-         new_pos_x = -1
+      )
+      if (feeds_by_distance.length > 0) {
+         x = feeds_by_distance[0].x - boat.x
+         y = feeds_by_distance[0].y - boat.y
       }
-      if (y > 0){
-         move_y = speed
-         new_pos_y = 1
-      }
-      if (y < 0) {
-         move_y = -(speed)
-         new_pos_y = -1
-      }
-      return {
-         x: new_pos_x,
-         y: new_pos_y,
-         speedX: move_x,
-         speedY: move_y
-      }
+
    }
-   // short feeds and boats by distance
-   let feeds_by_distance = feeds.sort((a, b) => {
-      return (Math.abs(a.x - boat.x) + Math.abs(a.y - boat.y)) - (Math.abs(b.x - boat.x) + Math.abs(b.y - boat.y))
+
+   if (x > 0) {
+      speedX = speed
    }
-   )
-   if (feeds_by_distance.length > 0) {
-      let x = feeds_by_distance[0].x - boat.x
-      let y = feeds_by_distance[0].y - boat.y
-      let move_x = 0
-      let move_y = 0
-      if (x > 0) move_x = 1
-      if (x < 0) move_x = -1
-      if (y > 0) move_y = 1
-      if (y < 0) move_y = -1
-      return {
-         x: move_x,
-         y: move_y,
-         speedX: x,
-         speedY: y
-      }
+   else if (x < 0) {
+      speedX = -(speed)
    }
-   return false
+   if (y > 0) {
+      speedY = speed
+   }
+   else if (y < 0) {
+      speedY = -(speed)
+   }
+
+   return {
+      speedX: speedX,
+      speedY: speedY
+   }
 
 }
 
