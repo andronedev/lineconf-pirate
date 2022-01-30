@@ -8,12 +8,14 @@ const BOATLEFT = new Image();
 BOATLEFT.src = "/images/boat-left.png";
 var BACKGROUND = new Image();
 BACKGROUND.src = "/images/1.jpg ";
-
+const MAP = {
+    width: 1500,
+    height: 1500
+};
 class Boat {
-    constructor(width, height, color, x, y, name, id = "", socket) {
+    constructor(width, height, x, y, name, id = "", socket) {
         this.width = width;
         this.height = height;
-        this.color = color;
         this.speedX = 0;
         this.speedY = 0;
         this.x = x;
@@ -151,10 +153,7 @@ class Game {
     constructor(socket, username) {
         this.canvas = document.createElement("canvas");
         this.context = this.canvas.getContext("2d");
-        this.map = {
-            width: 1500,
-            height: 1500
-        }
+        this.map = MAP;
         this.canvas.width = this.map.width;
         this.canvas.height = this.map.height;
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
@@ -167,7 +166,8 @@ class Game {
         this.poisons = [];
         this.camera = {
             x: 0,
-            y: 0
+            y: 0,
+            zoom: 1.5
         }
 
     }
@@ -188,7 +188,7 @@ class Game {
             self.keys = (self.keys || []);
             self.keys[e.keyCode] = false;
         })
-        // screen touch
+        // screen touch / bientôt
         // window.addEventListener('touchmove', function (e) {
 
     }
@@ -216,7 +216,7 @@ class Game {
         self.myBoat.speedX = 0;
         self.myBoat.speedY = 0;
         var size = (self.myBoat.width + self.myBoat.height);
-        speed = 30 * 1/size 
+        speed = 100 * 1 / size
         if (self.keys && self.keys[37]) { self.myBoat.speedX = -(speed) }
         if (self.keys && self.keys[39]) { self.myBoat.speedX = (speed) }
         if (self.keys && self.keys[38]) { self.myBoat.speedY = -(speed) }
@@ -276,24 +276,25 @@ class Game {
 
         this.context.resetTransform();
         // map is 2000x2000
-       
+
         // if boat is out od the screen
         if (boat.x < window.innerWidth - boat.width) {
-            this.camera.x = boat.x *1.5 - window.innerWidth / 2 + boat.width / 2;
+            this.camera.x = boat.x * this.camera.zoom - window.innerWidth / 2 + boat.width / 2;
         }
         if (boat.x > window.innerWidth - boat.width) {
-            this.camera.x = boat.x *1.5 - window.innerWidth / 2 + boat.width / 2;
+            this.camera.x = boat.x * this.camera.zoom - window.innerWidth / 2 + boat.width / 2;
         }
         if (boat.y < window.innerHeight - boat.height) {
-            this.camera.y = boat.y *1.5 - window.innerHeight / 2 + boat.height / 2;
+            this.camera.y = boat.y * this.camera.zoom - window.innerHeight / 2 + boat.height / 2;
         }
         if (boat.y > window.innerHeight - boat.height) {
-            this.camera.y = boat.y *1.5 - window.innerHeight / 2 + boat.height / 2;
+            this.camera.y = boat.y * this.camera.zoom - window.innerHeight / 2 + boat.height / 2;
         }
 
-        
+        this.camera.zoom = 1.5 - (boat.width + boat.height) / 2000;
+
         this.context.translate(-this.camera.x, -this.camera.y)
-        this.context.scale(1.5, 1.5);
+        this.context.scale(this.camera.zoom, this.camera.zoom);
 
 
 
@@ -313,22 +314,11 @@ class Game {
     }
     startGame() {
         var self = this;
-        self.myBoat = new Boat(30, 30, "red", 10, 200 * Math.random(), self.username, self.socket.id, self.socket);
-        self.myBoat.sync();
-        self.socket.emit('join', {
-            width: self.myBoat.width,
-            height: self.myBoat.height,
-            x: self.myBoat.x,
-            y: self.myBoat.y,
-            color: self.myBoat.color,
-            name: self.myBoat.name,
-            id: self.socket.id
-        });
 
         self.socket.on("joined", function (data) {
             if (data.id == self.socket.id) return
             if (self.otherBoats[data.id] == null) {
-                var b = new Boat(data.width, data.height, data.color, data.x, data.y, data.name, data.id, self.socket)
+                var b = new Boat(data.width, data.height, data.x, data.y, data.name, data.id, self.socket)
                 self.otherBoats.push(b);
                 console.log(b.name + " joined");
                 b.sync()
@@ -353,6 +343,7 @@ class Game {
         });
 
         fetch("/init").then(res => res.json()).then(data => {
+            console.log(data)
             data.feeds.forEach(f => {
                 if (self.feeds[f.id] == null) {
                     var feed = new Feed(f.x, f.y, f.id, self.socket);
@@ -370,13 +361,26 @@ class Game {
 
             for (const [key, value] of Object.entries(data.boats)) {
                 if (self.otherBoats[key] == null && key != self.socket.id) {
-                    var b = new Boat(value.width, value.height, value.color, value.x, value.y, value.name, key, self.socket);
+                    var b = new Boat(value.width, value.height, value.x, value.y, value.name, key, self.socket);
                     self.otherBoats.push(b);
                     console.log(b.name + " joined");
                     b.sync()
                     b.sync_move()
                 }
             }
+
+            self.myBoat = new Boat(30, 30, data.x, data.y, self.username, self.socket.id, self.socket);
+            self.myBoat.sync();
+            self.socket.emit('join', {
+                width: self.myBoat.width,
+                height: self.myBoat.height,
+                x: self.myBoat.x,
+                y: self.myBoat.y,
+                color: self.myBoat.color,
+                name: self.myBoat.name,
+                id: self.socket.id
+            });
+
             document.body.style.backgroundImage = "url(" + data.background + ")";
             var audio = new Audio('/musique/main.mp3');
             audio.loop = true;

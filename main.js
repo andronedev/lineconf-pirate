@@ -1,8 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const app = express()
-
-// ajout de socket.io
+const config = require('./config')
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
 
@@ -14,82 +13,37 @@ app.get('/', function (req, res) {
    res.sendFile('public/index.html', { root: __dirname })
 })
 
-const MAP = {
-   width: 1500,
-   height: 1500
-}
 
 function rnd_background() {
    return "/images/" + (Math.floor(Math.random() * 5) + 1) + ".jpg"
 }
+
+
 var current_background = rnd_background()
-// serv static files at /images
 app.use('/images', express.static('public/images'))
 app.use('/musique', express.static('public/musique'))
 app.use('/js', express.static('public/js'))
-var boats_name = [
-   "Pierre",
-   "Julie",
-   "Yvan",
-   "Petronille",
-   "Madeleine",
-   "Geraldine",
-   "Yves",
-   "Paul",
-   "Ugs",
-   "Jean-eudes",
-   "Clitorine",
-   "Gertrude",
-   "Jenifaëlle",
-   "Raimond",
-   "Joseph",
-   "Germaine",
-   "Henri",
-   "Marcel",
-   "Georges",
-   "Suzanne",
-   "François",
-   "Jean-baptiste",
-   "Emile",
-   "Morice",
-   "Albert",
-   "Alban",
-   "Eugène",
-   "Leon",
-   "Lucien",
-   "Auguste",
-   "Georgette",
-   "Robert",
-   "Roger",
-   "Eleonore",
-   "Odénie",
-   "Agathe",
-   "Hector",
-   "Hubert",
-   "Gilles",
-   "Ernest",
-   "Adolphe",
-]
+
 var boats = {}
 var feeds = []
 var poisons = []
+
+
 app.get('/init', function (req, res) {
+   let {x,y} = find_safe_position()
    res.send({
-      map: MAP,
+      map: config.MAP,
       boats,
       feeds,
       poisons,
-      background: current_background
+      background: current_background,
+      x,
+      y
    })
 })
-function edit_or_push(id, data) {
-   data.id = id
-   // modify only attributes that are different
-   boats[id] = { ...boats[id], ...data }
-}
+
 
 function boat_collision(boat1) {
-   // RETURN THE ANOTHER BOAT THAT CRASH WITH THE FIRST ONE
 
    for (const [key, value] of Object.entries(boats)) {
       if (boat1.id != value.id) {
@@ -155,7 +109,7 @@ io.on('connection', (socket) => {
    socket.on("join", (data) => {
       console.log(data.name + " joined")
       data.id = socket.id
-      edit_or_push(socket.id, data)
+      boats[socket.id] = data
       io.emit("joined", data)
    })
    socket.on("move", (data) => {
@@ -172,19 +126,21 @@ io.on('connection', (socket) => {
 })
 
 function moving(data) {
-   edit_or_push(data.id, {
+   
+   boats[data.id] = {
+      ...boats[data.id],
       x: data.x,
       y: data.y
-   })
+   }
    // console.log(data)
 
-   // check if the boat crash with another one
+   // Verification de la collision
    var crash = boat_collision(boats[data.id])
    if (crash) {
       crash = boats[crash]
       var myboat = boats[data.id]
       console.log("crash with", crash)
-      // check if the boat is bigger than the other one
+
 
       if (myboat.width + myboat.height > crash.width + crash.height) {
          io.emit("dead", {
@@ -224,10 +180,11 @@ function moving(data) {
    }
 
    var eat = eat_collision(boats[data.id])
+
    if (eat) {
       io.emit("eat", eat)
       feeds.splice(feeds.indexOf(eat), 1)
-      console.log(boats[data.id])
+      // console.log(boats[data.id])
       boats[data.id].width += 5
       boats[data.id].height += 5
       let new_size = {
@@ -252,16 +209,20 @@ function moving(data) {
       io.emit("win", new_size)
       update_scoreboard()
    }
-
+   // console.log(`
+   // ${boats[data.id].name}
+   // To ${boats[data.id].x} Speed ${boats[data.id].speedX}
+   // To ${boats[data.id].y} Speed ${boats[data.id].speedY}
+   // `)
    io.emit("move", data)
 }
 
 function createIA() {
-   let x = Math.floor(Math.random() * MAP.width)
-   let y = Math.floor(Math.random() * MAP.height)
+   var {x,y} = find_safe_position()
+
    let id = (Math.random() + 1).toString(36).substring(7)
-   let name = boats_name[Math.floor(Math.random() * boats_name.length)]
-   let size = + Math.floor(Math.random() * 10) + 30
+   let name = config.BOATS_NAME_IA[Math.floor(Math.random() * config.BOATS_NAME_IA.length)]
+   let size = 40 + Math.floor(Math.random() * 20)
    let boat = {
       id: id,
       x: x,
@@ -275,41 +236,66 @@ function createIA() {
    return boat
 }
 
-async function autopilot(ia) {
-   while (boats[ia.id]) {
-      randomMove(ia)
-
-      await new Promise(r => setTimeout(r, 20))
-      //check if the boat is too big
-      if (boats[ia.id].width > 500 || boats[ia.id].height > 500) {
-         delete boats[ia.id]
-         io.emit("dead", ia)
-         // generate 10 new ia
-         for (let i = 0; i < 10; i++) {
-            autopilot(createIA())
+function find_safe_position(){
+   let x = Math.floor(Math.random() * config.MAP.width)
+   let y = Math.floor(Math.random() * config.MAP.height)
+   // Cherche si la position est libre (100px au alentour)
+   let free = true
+   while (!free) {
+      for (let i = 0; i < boats.length; i++) {
+         if (boats[i].x <= x + 100 && boats[i].x >= x - 100 && boats[i].y <= y + 100 && boats[i].y >= y - 100) {
+            x = Math.floor(Math.random() * config.MAP.width)
+            y = Math.floor(Math.random() * config.MAP.height)
+            free = false
+            break
          }
-         return
       }
+      free = true
+   }
+   return {
+      x: x,
+      y: y
    }
 }
 
-function randomMove(ia) {
-   let boat = boats[ia.id]
+
+
+async function autopilot(ia) {
+   while (boats[ia.id]) {
+      
+      // Au dela de MAX_BOATS_IA le bateau a perdu (pour eviter que les IA gagne en boucle)
+      
+      if (boats[ia.id].width > config.MAX_SIZE_IA || boats[ia.id].height > config.MAX_SIZE_IA) {
+         delete boats[ia.id]
+         io.emit("dead", ia)
+         break
+      }
+         
+      // on attend 20 ms (fps)
+      await new Promise(r => setTimeout(r, 20))
+
+      iaMove(ia)
+
+   }
+}
+
+function iaMove(ia){
+   ia = boats[ia.id]
    let speedX = 0;
    let speedY = 0;
-   let x = boat.x
-   let y = boat.y
+   let x = ia.x
+   let y = ia.y
 
    var speed = 0
    var size = (ia.width + ia.height);
+   speed = 100 * 1 / size
+   
 
-   speed = 30 * 1 / size
-   // move to one random direction
-   // cap to feed 
-   let bestdirec = get_best_direction(boat, speed)
+   let bestdirec = get_best_direction(ia, speed)
    if (bestdirec) {
       speedX = bestdirec.speedX
       speedY = bestdirec.speedY
+      // console.log(bestdirec)
       x += speedX
       y += speedY
       if (x < 0) {
@@ -318,11 +304,11 @@ function randomMove(ia) {
       if (y < 0) {
          y = 0
       }
-      if (x > MAP.width) {
-         x = MAP.width
+      if (x > config.MAP.width - ia.width) {
+         x = config.MAP.width - ia.width
       }
-      if (y > MAP.height) {
-         y = MAP.height
+      if (y > config.MAP.height - ia.height) {
+         y = config.MAP.height - ia.height
       }
       boats[ia.id] = {
          ...boats[ia.id],
@@ -333,11 +319,13 @@ function randomMove(ia) {
       }
       moving(boats[ia.id])
    }
-
 }
 
+
 function get_best_direction(boat, speed) {
-   // donne la direction la plus proche de la nourriture ou d'un bateau adverse plus petit 
+   // Permet de déterminer la direction la plus optimale pour se déplacer
+   // en fonction de la position de la nourriture la plus proche
+   // ou du bateau le plus proche (si il y en a un et qu'il soit plus petit)
    let boat_list = Object.values(boats)
    let boat_smallest = boat_list.filter(b => b.id != boat.id && b.width + b.height < boat.width + boat.height)
    var x = boat.x
@@ -348,13 +336,12 @@ function get_best_direction(boat, speed) {
    let boat_smallest_by_distance = boat_smallest.sort((a, b) => {
       return (Math.abs(a.x - boat.x) + Math.abs(a.y - boat.y)) - (Math.abs(b.x - boat.x) + Math.abs(b.y - boat.y))
    })
-   // check what is the best direction
+   
    if (boat_smallest_by_distance.length > 0) {
       x = boat_smallest_by_distance[0].x - boat.x
       y = boat_smallest_by_distance[0].y - boat.y
 
    } else {
-      // short feeds and boats by distance
       let feeds_by_distance = feeds.sort((a, b) => {
          return (Math.abs(a.x - boat.x) + Math.abs(a.y - boat.y)) - (Math.abs(b.x - boat.x) + Math.abs(b.y - boat.y))
       }
@@ -386,30 +373,29 @@ function get_best_direction(boat, speed) {
 
 }
 
-// function random_name() {
-//    return random_names[Math.floor(Math.random() * random_names.length)]
+// GENERATION DES IAs :
+
 setInterval(() => {
-   if (Math.random() > 0.9) {
+      if (Math.random() > 0.8 && Object.values(boats).length < config.MAX_BOATS_IA) {
       autopilot(createIA())
    }
 }, 1000)
 
+
+// GENERATION DE LA NOURRITURES (feed) :
 
 setInterval(() => {
    console.log("Nombre de nourriture : " + feeds.length)
    if (feeds.length < 25) {
       let f = {
          id: (Math.random() + 1).toString(36).substring(7),
-         x: Math.random() * MAP.width,
-         y: Math.random() * MAP.height,
+         x: Math.random() * config.MAP.width - 10,
+         y: Math.random() * config.MAP.height - 10,
       }
-
       feeds.push(f)
       io.emit("feed", f)
    } else {
-      // remove random feed
-
-
+      // Suppression de la nourriture la plus vieille
       io.emit("eat", {
          id: feeds[0].id
       })
@@ -418,13 +404,15 @@ setInterval(() => {
    }
 }, 7000)
 
+// GENERATION DES POISSONS :
+
 setInterval(() => {
    console.log("Nombre de poison : " + poisons.length)
    if (poisons.length < 35) {
       let p = {
          id: (Math.random() + 1).toString(36).substring(7),
-         x: Math.random() * MAP.width,
-         y: Math.random() * MAP.height
+         x: Math.random() * config.MAP.width - 10,
+         y: Math.random() * config.MAP.height - 10,
       }
 
       poisons.push(p)
@@ -439,13 +427,16 @@ setInterval(() => {
    }
 
 }, 6000)
-// on change app par server
+
+// CHANGEMENT DE FOND :
 setInterval(() => {
    current_background = rnd_background()
    io.emit("update_background_image", {
       image: current_background
    })
 }, 60000)
+
+
 function update_scoreboard() {
    let score = Object.keys(boats).map(boat => {
       return {
@@ -461,8 +452,11 @@ function update_scoreboard() {
       score
    })
 }
+
+
 setInterval(() => {
    update_scoreboard()
 }, 5000)
+
 const PORT = process.env.PORT || 3000
 server.listen(PORT, function () { console.log('Votre app est disponible sur localhost:3000 !') })
