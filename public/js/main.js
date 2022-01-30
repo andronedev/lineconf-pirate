@@ -288,8 +288,10 @@ class Game {
             this.camera.y = boat.y * this.camera.zoom - window.innerHeight / 2 + boat.height / 2;
         }
 
-        this.camera.zoom = 1.5 - (boat.width + boat.height) / 2000;
-
+        this.camera.zoom = 1.5 - (boat.width + boat.height) / 2000; // TODO : corriger le bug du zoom
+        if (this.camera.zoom < 0.5) {
+            this.camera.zoom = 0.5;
+        }
         this.context.translate(-this.camera.x, -this.camera.y)
         this.context.scale(this.camera.zoom, this.camera.zoom);
 
