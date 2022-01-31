@@ -6,8 +6,8 @@ var config = {
     // ATTENTION ! : POUR MODIFIER LA TAILLE DE LA CARTE VEUILLEZ MODIFIER LES VALEURS DE LA VARIABLE "MAP" DANS LE FICHIER "main.js" DU DOSSIER "public/js"
     // Note : La taille de la carte est définie en pixels.
     MAP: {
-        width: 1500,
-        height: 1500
+        width: 3000,
+        height: 3000
     },
     // Si le nombre de bateau est inferieur a MAX_BOATS_IA alors on creer des bateaux IA
     MAX_BOATS_IA: 6,
