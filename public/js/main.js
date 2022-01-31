@@ -9,8 +9,8 @@ BOATLEFT.src = "/images/boat-left.png";
 var BACKGROUND = new Image();
 BACKGROUND.src = "/images/1.jpg ";
 const MAP = {
-    width: 3000,
-    height: 3000
+    width: 2000,
+    height: 2000
 };
 class Boat {
     constructor(width, height, x, y, name, id = "", socket) {
