@@ -10,11 +10,11 @@ var config = {
         height: 2000
     },
     // Si le nombre de bateau est inferieur a MAX_BOATS_IA alors on creer des bateaux IA
-    MAX_BOATS_IA: 6,
+    MAX_BOATS_IA: 4,
     // Au dela de MAX_BOATS_IA le bateau a perdu (pour eviter que les IA gagne en boucle)
-    MAX_SIZE_IA: 500,
+    MAX_SIZE_IA: 400,
     // Mise a jour de la carte (image de fond)
-    BACKGROUND_UPDATE_TIME: 60000,
+    BACKGROUND_UPDATE_TIME: 120000,
     // Nombre de Nourriture max (feed / rum)
     FEED_NUMBER: 25,
     // Nombre de Poison max (poison / rum)
@@ -24,17 +24,17 @@ var config = {
         "Pierre",
         "Julie",
         "Yvan",
-        "Petronille",
+        "Pétronille",
         "Madeleine",
-        "Geraldine",
+        "Géraldine",
         "Yves",
         "Paul",
-        "Ugs",
-        "Jean-eudes",
+        "Hugues",
+        "Jean-Eudes",
         "Clitorine",
         "Gertrude",
         "Jenifaëlle",
-        "Raimond",
+        "Raymond",
         "Joseph",
         "Germaine",
         "Henri",
@@ -42,9 +42,9 @@ var config = {
         "Georges",
         "Suzanne",
         "François",
-        "Jean-baptiste",
+        "Jean-Baptiste",
         "Emile",
-        "Morice",
+        "Maurice",
         "Albert",
         "Alban",
         "Eugène",
@@ -54,7 +54,7 @@ var config = {
         "Georgette",
         "Robert",
         "Roger",
-        "Eleonore",
+        "Eléonore",
         "Odénie",
         "Agathe",
         "Hector",
@@ -62,6 +62,9 @@ var config = {
         "Gilles",
         "Ernest",
         "Adolphe",
+        "Lucas la grosse merde",
+        "Théo le BG interplanétaire",
+        "Lennie la Blg"
     ]
 
 } 
